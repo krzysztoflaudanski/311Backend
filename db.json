@@ -1,0 +1,62 @@
+[
+    {
+      "title": "Mountain Bike for Sale",
+      "content": "Selling a mountain bike in excellent condition. Very comfortable, perfect for mountain trails. Price negotiable.",
+      "publicationDate": "2023-11-30",
+      "image": "/img/uploads/random.jpg",
+      "price": 800,
+      "location": "Warsaw",
+      "sellerInfo": {
+        "username": "John Smith",
+        "phone": "123-456-789"
+      }
+    },
+    {
+      "title": "Modern Sofa with Sleeper Function",
+      "content": "For sale, an elegant sofa, perfect for the living room. Comfortable, easy to keep clean. Price negotiable.",
+      "publicationDate": "2023-11-30",
+      "image": "/img/uploads/random.jpg",
+      "price": 1200,
+      "location": "Krakow",
+      "sellerInfo": {
+        "username": "Anna Nowak",
+        "phone": "987-654-321"
+      }
+    },
+    {
+      "title": "HP Laptop with Latest Processor",
+      "content": "Offering an HP laptop with the latest processor. Perfect for work and entertainment. Price negotiable.",
+      "publicationDate": "2023-11-30",
+      "image": "/img/uploads/random.jpg",
+      "price": 2500,
+      "location": "Wroclaw",
+      "sellerInfo": {
+        "username": "Peter Wisniewski",
+        "phone": "111-222-333"
+      }
+    },
+    {
+      "title": "Antique Dining Table made of Solid Wood",
+      "content": "For sale, a beautiful antique dining table made of solid wood. Perfect for an elegant interior. Price negotiable.",
+      "publicationDate": "2023-11-30",
+      "image": "/img/uploads/random.jpg",
+      "price": 1800,
+      "location": "Poznan",
+      "sellerInfo": {
+        "username": "Marta Zielinska",
+        "phone": "555-666-777"
+      }
+    },
+    {
+      "title": "Tool Set for Workshop",
+      "content": "Selling a complete set of tools for the workshop, including a screwdriver, hammer, wrenches, and more. Price negotiable.",
+      "publicationDate": "2023-11-30",
+      "image": "/img/uploads/random.jpg",
+      "price": 500,
+      "location": "Gdansk",
+      "sellerInfo": {
+        "username": "Tomasz Nowicki",
+        "phone": "333-444-555"
+      }
+    }
+  ]
