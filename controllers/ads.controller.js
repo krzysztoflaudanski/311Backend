@@ -1,5 +1,27 @@
 const Ad = require('../models/ad.model');
 const mongoose = require('mongoose');
+const multer = require('multer');
+
+const fileStorageEngine = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, './img/uploads')
+    },
+    filename: (req, file, cb) => {
+        cb(null, file.originalname)
+    },
+});
+
+const upload = multer({
+    storage: fileStorageEngine,
+    fileFilter: (req, file, cb) => {
+        if (file.mimetype == 'image/png' || file.mimetype == 'image/jpg' || file.mimetype == 'image/jpeg' || file.mimetype == 'image/gif') {
+            cb(null, true);
+        } else {
+            req.fileError = 'Only .png, .jpg, .jpeg, or .gif files are allowed.';
+            cb(null, false);
+        }
+    }
+});
 
 exports.getAll = async (req, res) => {
     try {
@@ -13,7 +35,6 @@ exports.getAll = async (req, res) => {
 exports.getById = async (req, res) => {
 
     const id = req.params.id;
-    console.log(req.params)
     if (!mongoose.Types.ObjectId.isValid(id)) {
         res.status(501).json({ message: 'Invalid UUID' });
     } else {
@@ -33,24 +54,26 @@ exports.post = async (req, res) => {
             image,
             price,
             location,
-            'sellerInfo[username]': sellerUsername,
-            'sellerInfo[phone]': sellerPhone,
+            sellerInfo
         } = req.body;
-        const newAd = new Ad({
-            title: title,
-            content: content,
-            publicationDate: publicationDate,
-            image: image,
-            price: price,
-            location: location,
-            sellerInfo: {
-                username: sellerUsername,
-                phone: sellerPhone
-            },
-        });
-        console.log(req.body)
-        await newAd.save();
-        res.json({ message: 'OK' });
+        if (title, content, publicationDate, image, price, location) {
+            const newAd = new Ad({
+                title: title,
+                content: content,
+                publicationDate: publicationDate,
+                image: image,
+                price: price,
+                location: location,
+                sellerInfo: {
+                    username: sellerInfo.username,
+                    phone: sellerInfo.phone
+                },
+            });
+            await newAd.save();
+            res.json({ message: 'OK' });
+        } else {
+            res.status(404).json({ message: 'Not found...' });
+        }
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: err });
@@ -58,9 +81,7 @@ exports.post = async (req, res) => {
 };
 
 exports.put = async (req, res) => {
-
     const id = req.params.id;
-
     if (!mongoose.Types.ObjectId.isValid(id)) {
         res.status(501).json({ message: 'Invalid UUID' });
     } else {
@@ -71,11 +92,9 @@ exports.put = async (req, res) => {
             image,
             price,
             location,
-            'sellerInfo[username]': sellerUsername,
-            'sellerInfo[phone]': sellerPhone,
+            //sellerInfo: {username, phone} //x-www-from-urlencoded
+            sellerInfo
         } = req.body;
-        console.log(req.body)
-        //console.log(sellerInfo)
         const ad = await Ad.findById(req.params.id);
         if (ad) {
             if (title) ad.title = title;
@@ -84,8 +103,8 @@ exports.put = async (req, res) => {
             if (image) ad.image = image;
             if (price) ad.price = price;
             if (location) ad.location = location;
-            if (sellerUsername) ad.sellerInfo.username = sellerUsername;
-            if (sellerPhone) ad.sellerInfo.phone = sellerPhone;
+            if (sellerInfo) ad.sellerInfo.username = sellerInfo.username;
+            if (sellerInfo) ad.sellerInfo.phone = sellerInfo.phone;
             await ad.save();
             res.json(ad);
         } else {

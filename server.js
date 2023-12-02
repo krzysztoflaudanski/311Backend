@@ -10,7 +10,8 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+app.use(express.urlencoded({ extended: true }));
+app.use(express.static(path.join(__dirname, '/img')));
 
 app.use('/api', adsRoutes);
 app.use('/api', usersRoutes);
@@ -18,6 +19,10 @@ app.use('/api', usersRoutes);
 app.get('/', (req, res) => {
   res.send('<h1>My first server!</h1>');
 });
+
+// app.get('/form', (req, res) => {
+//   res.sendFile(path.join(__dirname, './form.html'));
+// });
 
 app.use((err, req, res, next) => {
   if (err) {
