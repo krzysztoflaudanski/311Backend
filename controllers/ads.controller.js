@@ -25,7 +25,6 @@ exports.getById = async (req, res) => {
 };
 
 exports.post = async (req, res) => {
-        console.log(req.body)
     try {
         const {
             title,
@@ -34,7 +33,8 @@ exports.post = async (req, res) => {
             image,
             price,
             location,
-            //sellerInfo: { username, phone }
+            'sellerInfo[username]': sellerUsername,
+            'sellerInfo[phone]': sellerPhone,
         } = req.body;
         const newAd = new Ad({
             title: title,
@@ -43,8 +43,12 @@ exports.post = async (req, res) => {
             image: image,
             price: price,
             location: location,
-            //sellerInfo: { username: username, phone: phone }
+            sellerInfo: {
+                username: sellerUsername,
+                phone: sellerPhone
+            },
         });
+        console.log(req.body)
         await newAd.save();
         res.json({ message: 'OK' });
     } catch (err) {
@@ -67,9 +71,11 @@ exports.put = async (req, res) => {
             image,
             price,
             location,
-            sellerInfo: {username, phone}
+            'sellerInfo[username]': sellerUsername,
+            'sellerInfo[phone]': sellerPhone,
         } = req.body;
-        console.log(sellerInfo)
+        console.log(req.body)
+        //console.log(sellerInfo)
         const ad = await Ad.findById(req.params.id);
         if (ad) {
             if (title) ad.title = title;
@@ -78,8 +84,8 @@ exports.put = async (req, res) => {
             if (image) ad.image = image;
             if (price) ad.price = price;
             if (location) ad.location = location;
-            if (username) ad.username = username;
-            if (sellerInfo) ad.sellerInfo = { username: username, phone: phone }
+            if (sellerUsername) ad.sellerInfo.username = sellerUsername;
+            if (sellerPhone) ad.sellerInfo.phone = sellerPhone;
             await ad.save();
             res.json(ad);
         } else {

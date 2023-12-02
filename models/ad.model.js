@@ -11,9 +11,11 @@ const adSchema = new mongoose.Schema({
         type: {
             username: {
                 type: String,
+                required: true
             },
             phone: {
                 type: String,
+                required: true
             }
         },
     }
