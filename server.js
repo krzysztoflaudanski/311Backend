@@ -5,6 +5,7 @@ const mongoose = require('mongoose');
 
 const adsRoutes = require('./routes/ads.routes');
 const usersRoutes = require('./routes/users.routes')
+const authRoutes = require('./routes/auth.routes')
 
 const app = express();
 
@@ -15,6 +16,7 @@ app.use(express.static(path.join(__dirname, '/img')));
 
 app.use('/api', adsRoutes);
 app.use('/api', usersRoutes);
+app.use('/auth', authRoutes)
 
 app.get('/', (req, res) => {
   res.send('<h1>My first server!</h1>');
