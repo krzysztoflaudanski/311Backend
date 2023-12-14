@@ -19,11 +19,12 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, '/img')));
-app.use(session({ secret: 'xyz567', store: MongoStore.create(mongoose.connection), resave: false, saveUninitialized: false}));
+app.use(session({
+  secret: 'xyz567', store: MongoStore.create(mongoose.connection), resave: false, saveUninitialized: false}));
 
 app.use('/api', adsRoutes);
 app.use('/api', usersRoutes);
-app.use('/auth', authRoutes)
+app.use('/auth', authRoutes);
 
 app.get('/', (req, res) => {
   res.send('<h1>My first server!</h1>');

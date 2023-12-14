@@ -28,30 +28,42 @@ exports.login = async (req, res) => {
         const { login, password } = req.body;
 
         if (login && typeof login === 'string' && password && typeof password === 'string') {
-            const user = await User.findOne({ login })
+            const user = await User.findOne({ login });
             if (!user) {
-                res.status(400).send({ message: 'Login or password are incorrect' })
+                res.status(400).send({ message: 'Login or password are incorrect' });
             } else {
                 if (bcrypt.compareSync(password, user.password)) {
-                    req.session.login = user.login;
-                    res.status(200).send({ message: 'Login successful' })
+                    req.session.user = {
+                        id: user.id,
+                        login: user.login,
+                    };
+                    res.status(200).send({ message: 'Login successful' });
                 } else {
-                    res.status(400).send({ message: 'Login or password are incorrect' })
+                    res.status(400).send({ message: 'Login or password are incorrect' });
                 }
             }
         } else {
             res.status(400).send({ message: 'Bad request' });
         }
-    } catch {
+    } catch (err) {
         res.status(500).send({ message: err.message });
     }
-}
+};
+
+exports.logout = async (req, res) => {
+    try {
+        req.session.destroy((err) => {
+            if (err) {
+                res.status(500).send({ message: err.message });
+            } else {
+                res.status(200).send({ message: 'Logout succesfull' });
+            }
+        });
+    } catch (err) {
+        res.status(500).send({ message: err.message });
+    }
+};
 
 exports.getUser = async (req, res) => {
-
-    // if (req.session.login) {
-         res.send({ login: req.session.login });
-    // } else {
-    //     res.status(401).send({ message: 'you are not authorized' })
-    // }
-}
+    res.send({ login: req.session.user.login });
+};

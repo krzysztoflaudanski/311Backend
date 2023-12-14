@@ -1,12 +1,13 @@
 const express = require('express');
 const router = express.Router();
-const authMiddelware = require('../utils/authMiddelware');
+const authMiddleware = require('../utils/authMiddleware');
 
 const auth = require('../controllers/auth.controller');
 const uploadImage = require('../utils/uploadImage')
 
 router.post('/register', uploadImage.single('avatar') ,auth.register);
-router.post('/login', uploadImage.single('avatar'), auth.login);
-router.get('/user', authMiddelware, auth.getUser)
+router.post('/login', auth.login);
+router.get('/user', authMiddleware, auth.getUser)
+router.post('/logout', authMiddleware, auth.logout);
 
 module.exports = router;
