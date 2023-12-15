@@ -20,7 +20,10 @@ const upload = multer({
             req.fileError = 'Only .png, .jpg, .jpeg, or .gif files are allowed.';
             cb(null, false);
         }
-    }
+    },
+    limits: {
+        fileSize: 1024 * 1024 * 5, // 5 MB
+    },
 });
 
 module.exports = upload;

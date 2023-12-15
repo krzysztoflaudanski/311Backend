@@ -2,10 +2,11 @@ const Ad = require('../models/ad.model');
 const mongoose = require('mongoose');
 const path = require('path')
 const fs = require('fs');
+const User = require('../models/user.model')
 
 exports.getAll = async (req, res) => {
     try {
-        res.json(await Ad.find({}));
+        res.json(await Ad.find().populate('user'));
     }
     catch (err) {
         res.status(500).json({ message: err });
@@ -18,7 +19,7 @@ exports.getById = async (req, res) => {
     if (!mongoose.Types.ObjectId.isValid(id)) {
         res.status(501).json({ message: 'Invalid UUID' });
     } else {
-        const ad = await Ad.findById(req.params.id);
+        const ad = await Ad.findById(req.params.id).populate('user');
         console.log(ad)
         if (!ad) res.status(404).json({ message: 'Not found' });
         else res.json(ad);
@@ -33,7 +34,6 @@ exports.post = async (req, res) => {
             publicationDate,
             price,
             location,
-            sellerInfo,
         } = req.body;
 
         if (!req.file) {
@@ -48,13 +48,10 @@ exports.post = async (req, res) => {
             image: fileRoute,
             price: price,
             location: location,
-            sellerInfo: {
-                username: sellerInfo.username,
-                phone: sellerInfo.phone,
-            },
+            user: req.session.user.id,
         });
 
-        await newAd.save();
+        (await newAd.save()).populate('user');
         res.json({ message: 'OK' });
 
     } catch (err) {
@@ -77,15 +74,13 @@ exports.put = async (req, res) => {
             publicationDate,
             price,
             location,
-            sellerInfo,
         } = req.body;
 
         const ad = await Ad.findById(req.params.id);
-
-        if (ad) {
+        
+        if (ad && ad.user === req.session.user.id) {
             if (req.file.filename) {
                 const oldFilePath = path.join(__dirname, '..', ad.image);
-                console.log(oldFilePath)
                 if (fs.existsSync(oldFilePath)) {
                     fs.unlinkSync(oldFilePath);
                 }
@@ -100,10 +95,6 @@ exports.put = async (req, res) => {
             }
             if (price) ad.price = price;
             if (location) ad.location = location;
-            if (sellerInfo) {
-                ad.sellerInfo.username = sellerInfo.username;
-                ad.sellerInfo.phone = sellerInfo.phone;
-            }
 
             await ad.save();
             res.json(ad);
@@ -124,7 +115,7 @@ exports.delete = async (req, res) => {
         res.status(501).json({ message: 'Invalid UUID' });
     } else {
         const deletedAd = await Ad.findById(req.params.id);
-        if (deletedAd) {
+        if (deletedAd && deletedAd.user === req.session.user.id) {
             const oldFilePath = path.join(__dirname, '..', deletedAd.image);
             if (fs.existsSync(oldFilePath)) {
                 fs.unlinkSync(oldFilePath);
@@ -136,3 +127,22 @@ exports.delete = async (req, res) => {
         }
     }
 };
+
+exports.getBySearch = async (req, res) => {
+    try {
+        const searchPhrase = req.params.searchPhrase 
+        const searchResults = await Ad.find({
+            $or: [
+              { title: { $regex: `\\b${searchPhrase}\\b`, $options: 'i' } },
+              { content: { $regex: `\\b${searchPhrase}\\b`, $options: 'i' } },
+            ],
+          });
+          if (searchResults.length > 0) {
+          res.json(searchResults);
+          } else {
+            res.json({ message: 'no search results...'});
+          }
+    } catch (err) {
+        res.status(500).json({ message: err });
+    }
+}

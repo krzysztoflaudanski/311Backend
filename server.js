@@ -7,7 +7,7 @@ const MongoStore = require('connect-mongo');
 
 
 const adsRoutes = require('./routes/ads.routes');
-const usersRoutes = require('./routes/users.routes')
+// const usersRoutes = require('./routes/users.routes')
 const authRoutes = require('./routes/auth.routes')
 
 const app = express();
@@ -23,7 +23,7 @@ app.use(session({
   secret: 'xyz567', store: MongoStore.create(mongoose.connection), resave: false, saveUninitialized: false}));
 
 app.use('/api', adsRoutes);
-app.use('/api', usersRoutes);
+// app.use('/api', usersRoutes);
 app.use('/auth', authRoutes);
 
 app.get('/', (req, res) => {
