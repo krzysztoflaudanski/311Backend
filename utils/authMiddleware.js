@@ -1,4 +1,4 @@
-const Session = require('../models/Session.model');
+const Session = require('../models/session.model');
 
 const authMiddleware = async (req, res, next) => {
 

@@ -1,8 +1,8 @@
 const Ad = require('../models/ad.model');
 const mongoose = require('mongoose');
-const path = require('path')
+const path = require('path');
 const fs = require('fs');
-const User = require('../models/user.model')
+const sanitize = require('mongo-sanitize');
 
 exports.getAll = async (req, res) => {
     try {
@@ -28,13 +28,15 @@ exports.getById = async (req, res) => {
 
 exports.post = async (req, res) => {
     try {
+
+        const cleanBody = sanitize(req.body);
         const {
             title,
             content,
             publicationDate,
             price,
             location,
-        } = req.body;
+        } = cleanBody
 
         if (!req.file) {
             return res.status(400).json({ message: 'Please upload an image file' });
@@ -67,19 +69,19 @@ exports.put = async (req, res) => {
         if (!mongoose.Types.ObjectId.isValid(id)) {
             return res.status(501).json({ message: 'Invalid UUID' });
         }
-
+        const cleanBody = sanitize(req.body)
         const {
             title,
             content,
             publicationDate,
             price,
             location,
-        } = req.body;
+        } = cleanBody;
 
         const ad = await Ad.findById(req.params.id);
         
         if (ad && ad.user === req.session.user.id) {
-            if (req.file.filename) {
+            if (req.file && req.file.filename) {
                 const oldFilePath = path.join(__dirname, '..', ad.image);
                 if (fs.existsSync(oldFilePath)) {
                     fs.unlinkSync(oldFilePath);
@@ -89,12 +91,13 @@ exports.put = async (req, res) => {
             if (title) ad.title = title;
             if (content) ad.content = content;
             if (publicationDate) ad.publicationDate = publicationDate;
+            if (price) ad.price = price;
+            if (location) ad.location = location;
+
             if (req.file) {
                 const fileRoute = '/img/uploads/' + req.file.filename
                 ad.image = fileRoute;
             }
-            if (price) ad.price = price;
-            if (location) ad.location = location;
 
             await ad.save();
             res.json(ad);

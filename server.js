@@ -4,6 +4,7 @@ const path = require('path');
 const mongoose = require('mongoose');
 const session = require('express-session');
 const MongoStore = require('connect-mongo');
+const helmet = require('helmet');
 
 
 const adsRoutes = require('./routes/ads.routes');
@@ -19,6 +20,7 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, '/img')));
+app.use(helmet());
 app.use(session({
   secret: 'xyz567', store: MongoStore.create(mongoose.connection), resave: false, saveUninitialized: false}));
 

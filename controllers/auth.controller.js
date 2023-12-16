@@ -1,11 +1,14 @@
 const User = require('../models/user.model')
 const bcrypt = require('bcryptjs')
 const getImageFileType = require('../utils/getImageFileType')
+const sanitize = require('mongo-sanitize');
 
 exports.register = async (req, res) => {
 
     try {
-        const { login, password, phone } = req.body;
+        const cleanBody = sanitize(req.body)
+        const { password, phone, login} = cleanBody;
+
         const fileType = req.file ? await getImageFileType(req.file) : 'unknown';
 
         if (login && typeof login === 'string' && password && typeof password === 'string' && phone && typeof parseInt(phone) === 'number'
@@ -28,7 +31,9 @@ exports.register = async (req, res) => {
 
 exports.login = async (req, res) => {
     try {
-        const { login, password } = req.body;
+
+        const cleanBody = sanitize(req.body)
+        const {login, password} = cleanBody;
 
         if (login && typeof login === 'string' && password && typeof password === 'string') {
             const user = await User.findOne({ login });
