@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const path = require('path');
 const fs = require('fs');
 const sanitize = require('mongo-sanitize');
+const getImageFileType = require('../utils/getImageFileType')
 
 exports.getAll = async (req, res) => {
     try {
@@ -20,7 +21,7 @@ exports.getById = async (req, res) => {
         res.status(501).json({ message: 'Invalid UUID' });
     } else {
         const ad = await Ad.findById(req.params.id).populate('user');
-        console.log(ad)
+
         if (!ad) res.status(404).json({ message: 'Not found' });
         else res.json(ad);
     };
@@ -33,28 +34,50 @@ exports.post = async (req, res) => {
         const {
             title,
             content,
-            publicationDate,
             price,
             location,
         } = cleanBody
 
-        if (!req.file) {
+        const fileType = req.file ? await getImageFileType(req.file) : 'unknown';
+
+        if (!req.file || !req.file && ['image/png', 'image.jpeg', 'image/gif', 'image/jpg'].includes(fileType)) {
             return res.status(400).json({ message: 'Please upload an image file' });
         }
-        const fileRoute = '/img/uploads/' + req.file.filename
+        if (title && typeof title === 'string' && content && typeof content === 'string' && price && typeof parseInt(price) === 'number' &&
+            location && typeof location === 'string' && req.session.user.id) {
 
-        const newAd = new Ad({
-            title: title,
-            content: content,
-            publicationDate: publicationDate,
-            image: fileRoute,
-            price: price,
-            location: location,
-            user: req.session.user.id,
-        });
+            const fileRoute = '/img/uploads/' + req.file.filename
+            const currentDate = new Date();
 
-        (await newAd.save()).populate('user');
-        res.json({ message: 'OK' });
+            const pattern = new RegExp(/([A-z\d\s.,!?$-*:]*)/, 'g');
+            const titleMatched = title.match(pattern).join('');
+            const contentMatched = content.match(pattern).join('');
+
+            const locationPattern = new RegExp(/([A-z\s-]*)/, 'g');
+            const locationMatched = location.match(locationPattern).join('');
+
+            if (titleMatched.length < title.length || contentMatched.length < content.length || locationMatched.length < location.length) {
+                return res.status(400).json({ message: 'Invalid characters' });
+            }
+
+            const newAd = new Ad({
+                title: title,
+                content: content,
+                publicationDate: currentDate,
+                image: fileRoute,
+                price: price,
+                location: location,
+                user: req.session.user.id,
+            });
+
+            await newAd.save();
+
+            const adWithUser = await Ad.findById(newAd._id).populate('user');
+
+            res.json({ message: 'OK', ad: adWithUser });
+        } else {
+            res.status(400).send({ message: 'Bad request' })
+        }
 
     } catch (err) {
         console.error(err);
@@ -67,32 +90,60 @@ exports.put = async (req, res) => {
         const id = req.params.id;
 
         if (!mongoose.Types.ObjectId.isValid(id)) {
+
+            if (req.file) {
+                const fileRoute = path.join(__dirname, '../img/uploads/', req.file.filename)
+                fs.unlinkSync(fileRoute)
+            }
+
             return res.status(501).json({ message: 'Invalid UUID' });
         }
+
+        const fileType = req.file ? await getImageFileType(req.file) : 'unknown';
+        console.log(fileType)
+        if (!(['image/png', 'image.jpeg', 'image/gif', 'image/jpg'].includes(fileType))) {
+            return res.status(400).json({ message: 'Please upload an image file' });
+        }
+
         const cleanBody = sanitize(req.body)
         const {
             title,
             content,
-            publicationDate,
             price,
             location,
         } = cleanBody;
 
         const ad = await Ad.findById(req.params.id);
-        
+
         if (ad && ad.user === req.session.user.id) {
+
+            if (title) ad.title = title;
+            if (content) ad.content = content;
+            if (price) ad.price = price;
+            if (location) ad.location = location;
+
+            const pattern = new RegExp(/([A-z\d\s.,!?$-*:]*)/, 'g');
+            const titleMatched = title.match(pattern).join('');
+            const contentMatched = content.match(pattern).join('');
+
+            const locationPattern = new RegExp(/([A-z\s-]*)/, 'g');
+            const locationMatched = location.match(locationPattern).join('');
+
+            if (titleMatched.length < title.length || contentMatched.length < content.length || locationMatched.length < location.length) {
+                if (req.file) {
+                    const fileRoute = path.join(__dirname, '../img/uploads/', req.file.filename)
+                    fs.unlinkSync(fileRoute)
+                }
+                return res.status(400).json({ message: 'Invalid characters' });
+            }
+
             if (req.file && req.file.filename) {
                 const oldFilePath = path.join(__dirname, '..', ad.image);
+                //console.log("OLD" + oldFilePath)
                 if (fs.existsSync(oldFilePath)) {
                     fs.unlinkSync(oldFilePath);
                 }
             }
-
-            if (title) ad.title = title;
-            if (content) ad.content = content;
-            if (publicationDate) ad.publicationDate = publicationDate;
-            if (price) ad.price = price;
-            if (location) ad.location = location;
 
             if (req.file) {
                 const fileRoute = '/img/uploads/' + req.file.filename
@@ -133,18 +184,18 @@ exports.delete = async (req, res) => {
 
 exports.getBySearch = async (req, res) => {
     try {
-        const searchPhrase = req.params.searchPhrase 
+        const searchPhrase = req.params.searchPhrase
         const searchResults = await Ad.find({
             $or: [
-              { title: { $regex: `\\b${searchPhrase}\\b`, $options: 'i' } },
-              { content: { $regex: `\\b${searchPhrase}\\b`, $options: 'i' } },
+                { title: { $regex: `\\b${searchPhrase}\\b`, $options: 'i' } },
+                { content: { $regex: `\\b${searchPhrase}\\b`, $options: 'i' } },
             ],
-          });
-          if (searchResults.length > 0) {
-          res.json(searchResults);
-          } else {
-            res.json({ message: 'no search results...'});
-          }
+        });
+        if (searchResults.length > 0) {
+            res.json(searchResults);
+        } else {
+            res.json({ message: 'no search results...' });
+        }
     } catch (err) {
         res.status(500).json({ message: err });
     }
