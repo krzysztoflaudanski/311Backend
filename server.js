@@ -6,10 +6,8 @@ const session = require('express-session');
 const MongoStore = require('connect-mongo');
 const helmet = require('helmet');
 
-
 const adsRoutes = require('./routes/ads.routes');
-// const usersRoutes = require('./routes/users.routes')
-const authRoutes = require('./routes/auth.routes')
+const authRoutes = require('./routes/auth.routes');
 
 const app = express();
 
@@ -20,12 +18,12 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, '/img')));
+app.use(express.static(path.join(__dirname, '/client')));
 app.use(helmet());
 app.use(session({
   secret: 'xyz567', store: MongoStore.create(mongoose.connection), resave: false, saveUninitialized: false}));
 
 app.use('/api', adsRoutes);
-// app.use('/api', usersRoutes);
 app.use('/auth', authRoutes);
 
 app.get('/', (req, res) => {

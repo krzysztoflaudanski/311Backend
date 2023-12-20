@@ -38,13 +38,21 @@ exports.post = async (req, res) => {
             location,
         } = cleanBody
 
-        const fileType = req.file ? await getImageFileType(req.file) : 'unknown';
-
-        if (!req.file || !req.file && ['image/png', 'image.jpeg', 'image/gif', 'image/jpg'].includes(fileType)) {
-            return res.status(400).json({ message: 'Please upload an image file' });
-        }
         if (title && typeof title === 'string' && content && typeof content === 'string' && price && typeof parseInt(price) === 'number' &&
             location && typeof location === 'string' && req.session.user.id) {
+            console.log(req.file)
+            const fileType = req.file ? await getImageFileType(req.file) : 'unknown';
+            console.log(fileType)
+            console.log(await getImageFileType(req.file))
+
+            if (!req.file || !['image/png', 'image/jpeg', 'image/gif'].includes(fileType)) {
+                if (req.file) {
+                    const fileRoute = path.join(__dirname, '../img/uploads/', req.file.filename)
+                    fs.unlinkSync(fileRoute)
+                }
+                return res.status(400).json({ message: 'Please upload an image file' });
+            }
+
 
             const fileRoute = '/img/uploads/' + req.file.filename
             const currentDate = new Date();
@@ -57,6 +65,10 @@ exports.post = async (req, res) => {
             const locationMatched = location.match(locationPattern).join('');
 
             if (titleMatched.length < title.length || contentMatched.length < content.length || locationMatched.length < location.length) {
+                if (req.file) {
+                    const fileRoute = path.join(__dirname, '../img/uploads/', req.file.filename)
+                    fs.unlinkSync(fileRoute)
+                }
                 return res.status(400).json({ message: 'Invalid characters' });
             }
 
@@ -64,7 +76,7 @@ exports.post = async (req, res) => {
                 title: title,
                 content: content,
                 publicationDate: currentDate,
-                image: fileRoute,
+                image: fileRote,
                 price: price,
                 location: location,
                 user: req.session.user.id,
@@ -76,10 +88,18 @@ exports.post = async (req, res) => {
 
             res.json({ message: 'OK', ad: adWithUser });
         } else {
+            if (req.file) {
+                const fileRoute = path.join(__dirname, '../img/uploads/', req.file.filename)
+                fs.unlinkSync(fileRoute)
+            }
             res.status(400).send({ message: 'Bad request' })
         }
 
     } catch (err) {
+        if (req.file) {
+            const fileRoute = path.join(__dirname, '../img/uploads/', req.file.filename)
+            fs.unlinkSync(fileRoute)
+        }
         console.error(err);
         res.status(500).json({ message: err });
     }
@@ -99,12 +119,6 @@ exports.put = async (req, res) => {
             return res.status(501).json({ message: 'Invalid UUID' });
         }
 
-        const fileType = req.file ? await getImageFileType(req.file) : 'unknown';
-        console.log(fileType)
-        if (!(['image/png', 'image.jpeg', 'image/gif', 'image/jpg'].includes(fileType))) {
-            return res.status(400).json({ message: 'Please upload an image file' });
-        }
-
         const cleanBody = sanitize(req.body)
         const {
             title,
@@ -117,29 +131,57 @@ exports.put = async (req, res) => {
 
         if (ad && ad.user === req.session.user.id) {
 
-            if (title) ad.title = title;
-            if (content) ad.content = content;
-            if (price) ad.price = price;
-            if (location) ad.location = location;
-
             const pattern = new RegExp(/([A-z\d\s.,!?$-*:]*)/, 'g');
-            const titleMatched = title.match(pattern).join('');
-            const contentMatched = content.match(pattern).join('');
-
             const locationPattern = new RegExp(/([A-z\s-]*)/, 'g');
-            const locationMatched = location.match(locationPattern).join('');
 
-            if (titleMatched.length < title.length || contentMatched.length < content.length || locationMatched.length < location.length) {
-                if (req.file) {
-                    const fileRoute = path.join(__dirname, '../img/uploads/', req.file.filename)
-                    fs.unlinkSync(fileRoute)
+            if (title) {
+                const titleMatched = title.match(pattern).join('');
+                if (titleMatched.length < title.length) {
+                    if (req.file) {
+                        const fileRoute = path.join(__dirname, '../img/uploads/', req.file.filename)
+                        fs.unlinkSync(fileRoute)
+                    }
+                    return res.status(400).json({ message: 'Invalid characters' });
                 }
-                return res.status(400).json({ message: 'Invalid characters' });
-            }
+                ad.title = title
+            };
+            if (content) {
+                const contentMatched = content.match(pattern).join('');
+                if (contentMatched.length < content.length) {
+                    if (req.file) {
+                        const fileRoute = path.join(__dirname, '../img/uploads/', req.file.filename)
+                        fs.unlinkSync(fileRoute)
+                    }
+                    return res.status(400).json({ message: 'Invalid characters' });
+                }
+                ad.content = content;
+            };
+            if (price) ad.price = price;
+            if (location) {
+                const locationMatched = location.match(locationPattern).join('');
+                if (locationMatched.length < location.length) {
+                    if (req.file) {
+                        const fileRoute = path.join(__dirname, '../img/uploads/', req.file.filename)
+                        fs.unlinkSync(fileRoute)
+                    }
+                    return res.status(400).json({ message: 'Invalid characters' });
+                }
+                ad.location = location
+            };
+
+            const fileType = req.file ? await getImageFileType(req.file) : 'unknown';
+            console.log(fileType)
+            console.log(await getImageFileType(req.file))
 
             if (req.file && req.file.filename) {
                 const oldFilePath = path.join(__dirname, '..', ad.image);
-                //console.log("OLD" + oldFilePath)
+                if (!['image/png', 'image/jpeg', 'image/gif'].includes(fileType)) {
+
+                    const fileRoute = path.join(__dirname, '../img/uploads/', req.file.filename)
+                    fs.unlinkSync(fileRoute)
+
+                    return res.status(400).json({ message: 'Please upload an image file' });
+                }
                 if (fs.existsSync(oldFilePath)) {
                     fs.unlinkSync(oldFilePath);
                 }
@@ -153,9 +195,17 @@ exports.put = async (req, res) => {
             await ad.save();
             res.json(ad);
         } else {
+            if (req.file) {
+                const fileRoute = path.join(__dirname, '../img/uploads/', req.file.filename)
+                fs.unlinkSync(fileRoute)
+            }
             res.status(404).json({ message: 'Not found...' });
         }
     } catch (err) {
+        if (req.file) {
+            const fileRoute = path.join(__dirname, '../img/uploads/', req.file.filename)
+            fs.unlinkSync(fileRoute)
+        }
         console.error(err);
         res.status(500).json({ message: err.message });
     }

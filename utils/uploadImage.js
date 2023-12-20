@@ -13,14 +13,6 @@ const fileStorageEngine = multer.diskStorage({
 
 const upload = multer({
     storage: fileStorageEngine,
-    fileFilter: (req, file, cb) => {
-        if (file.mimetype == 'image/png' || file.mimetype == 'image/jpg' || file.mimetype == 'image/jpeg' || file.mimetype == 'image/gif') {
-            cb(null, true);
-        } else {
-            req.fileError = 'Only .png, .jpg, .jpeg, or .gif files are allowed.';
-            cb(null, false);
-        }
-    },
     limits: {
         fileSize: 1024 * 1024 * 5, // 5 MB
     },
