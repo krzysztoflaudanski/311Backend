@@ -14,21 +14,26 @@ const app = express();
 mongoose.connect('mongodb+srv://laudanskikrzysztof86:Password100@cluster0.c8kjc4z.mongodb.net/annDB?retryWrites=true&w=majority', { useNewUrlParser: true });
 const db = mongoose.connection;
 
-app.use(cors());
+if (process.env.NODE_ENV !== 'production') {
+  app.use(
+    cors({
+      origin: ['http://localhost:3000'],
+      credentials: true,
+    }
+    ));
+}
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, '/img')));
-app.use(express.static(path.join(__dirname, '/client')));
+app.use(express.static(path.join(__dirname, '/client/build')));
 app.use(helmet());
 app.use(session({
-  secret: 'xyz567', store: MongoStore.create(mongoose.connection), resave: false, saveUninitialized: false}));
+  secret: 'xyz567', store: MongoStore.create(mongoose.connection), resave: false, saveUninitialized: false
+}));
 
 app.use('/api', adsRoutes);
 app.use('/auth', authRoutes);
-
-app.get('/', (req, res) => {
-  res.send('<h1>My first server!</h1>');
-});
 
 app.use((err, req, res, next) => {
   if (err) {
@@ -47,8 +52,8 @@ db.once('open', () => {
 });
 db.on('error', err => console.log('Error ' + err));
 
-const server = app.listen(9000, () => {
-  console.log('Server is running on port: 9000');
+const server = app.listen(8000, () => {
+  console.log('Server is running on port: 8000');
 });
 
 module.exports = server;

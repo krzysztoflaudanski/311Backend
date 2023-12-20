@@ -29,7 +29,6 @@ exports.register = async (req, res) => {
 
             const passwordPattern = new RegExp(/([A-Za-z\d.,;:"'/?!@#$%^&*()--+=]*)/, 'g')
             const passwordMatched = password.match(passwordPattern).join('');
-            console.log(passwordMatched, password)
 
             if (loginMatched.length < login.length || passwordMatched.length < password.length) {
                 if (req.file) {
@@ -97,6 +96,18 @@ exports.login = async (req, res) => {
         const { login, password } = cleanBody;
 
         if (login && typeof login === 'string' && password && typeof password === 'string') {
+
+            const loginPattern = new RegExp(/([A-Za-z\d]*)/, 'g')
+            const loginMatched = login.match(loginPattern).join('');
+
+            const passwordPattern = new RegExp(/([A-Za-z\d.,;:"'/?!@#$%^&*()--+=]*)/, 'g')
+            const passwordMatched = password.match(passwordPattern).join('');
+
+            if (loginMatched.length < login.length || passwordMatched.length < password.length) {
+
+                return res.status(400).json({ message: 'Invalid characters' });
+            }
+
             const user = await User.findOne({ login });
             if (!user) {
                 res.status(400).send({ message: 'Login or password are incorrect' });

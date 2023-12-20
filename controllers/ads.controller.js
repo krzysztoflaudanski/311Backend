@@ -40,10 +40,8 @@ exports.post = async (req, res) => {
 
         if (title && typeof title === 'string' && content && typeof content === 'string' && price && typeof parseInt(price) === 'number' &&
             location && typeof location === 'string' && req.session.user.id) {
-            console.log(req.file)
+
             const fileType = req.file ? await getImageFileType(req.file) : 'unknown';
-            console.log(fileType)
-            console.log(await getImageFileType(req.file))
 
             if (!req.file || !['image/png', 'image/jpeg', 'image/gif'].includes(fileType)) {
                 if (req.file) {
@@ -76,7 +74,7 @@ exports.post = async (req, res) => {
                 title: title,
                 content: content,
                 publicationDate: currentDate,
-                image: fileRote,
+                image: fileRoute,
                 price: price,
                 location: location,
                 user: req.session.user.id,
@@ -170,8 +168,6 @@ exports.put = async (req, res) => {
             };
 
             const fileType = req.file ? await getImageFileType(req.file) : 'unknown';
-            console.log(fileType)
-            console.log(await getImageFileType(req.file))
 
             if (req.file && req.file.filename) {
                 const oldFilePath = path.join(__dirname, '..', ad.image);

@@ -18,7 +18,7 @@ const getImageFileType = async (image) => {
   try {
     const header = await determineHeader()
 
-    switch(header) {
+    switch (header) {
       case '89504e47':
         return 'image/png';
       case '47494638':
@@ -32,7 +32,7 @@ const getImageFileType = async (image) => {
       default:
         return 'unknown';
     }
-  } catch(err) {
+  } catch (err) {
     return 'unknown';
   }
 }
